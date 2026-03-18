@@ -1,0 +1,31 @@
+{
+  "name": "my_fin_control",
+  "version": "1.0.0",
+  "description": "Meu controle financeiro",
+  "license": "ISC",
+  "author": "wrne",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./src/server.js",
+    "dev": "nodemon ./src/server.js",
+    "init_env": "node ./src/config/init.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.45.1",
+    "express": "^4.21.1",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.20.0",
+    "swagger-ui-express": "^5.0.1",
+    "uuid": "^11.0.3"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.10",
+    "globals": "^15.14.0",
+    "nodemon": "^3.1.9"
+  }
+}

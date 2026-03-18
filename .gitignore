@@ -1,0 +1,16 @@
+*.bak
+*copy.*
+*bkp.*
+*.zip
+/Teste
+*.gitignore
+/.vscode
+*.code-workspace
+*.drawio*
+*.dio
+*.BAK
+.DS_Store
+node_modules
+.env
+package-lock.json
+.idea
