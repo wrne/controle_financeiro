@@ -1,4 +1,5 @@
 import express from "express";
+import {createExpressLoggerContext} from "./utils/logger.js"
 import bodyParser from "body-parser";
 import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
@@ -20,7 +21,8 @@ app.use(bodyParser.json());
 app.use(responseFormatter);
 app.use(helmet());
 
-// Rota para a documentação da API
+app.use(createExpressLoggerContext);
+	// Rota para a documentação da API
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Rotas que não necesistam autenticação
