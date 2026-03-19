@@ -1,9 +1,10 @@
 import {newUser, authUser} from "../../services/user-services.js"
+import { logInfo } from '../../utils/logger.js';
 
 export async function newUserController(req, res) {
 	
 	try {
-		const usersAdded = newUser(req.body)
+		const usersAdded = await newUser(req.body)
 		if (usersAdded < 1)
 			throw new Error("User include failed ");
 		

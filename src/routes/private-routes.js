@@ -5,12 +5,14 @@ import autorizateMiddleware from "./middleware/autorization-middleware.js"
 import loggerMiddleware from "./middleware/logger-middleware.js"
 import { logInfo } from "../utils/logger.js";
 
+import accountsRoute from "./accounts-routes.js"
 
 const router = express.Router();
 
 router.use(authMiddleware)	// Middleware de autenticação
 router.use(loggerMiddleware)// Middleware de logging
 
+router.use(accountsRoute); // Rotas de Contas
 // router.use(ordersRoute);
 
 router.post('/newUser',autorizateMiddleware(['admin']), newUserController);

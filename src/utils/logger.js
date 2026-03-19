@@ -80,7 +80,7 @@ function log(message, level = 'info') {
 
 export function logError(errorMessage, error) {
 
-	log(`errorMessage: ${errorMessage}\nDetails: ${error.cause} \nStack:${error.stack}`, 'error');
+	log(`errorMessage: ${errorMessage}\n${(!!error.cause ? `Details: ${error.cause}\n` : '')}Stack:${error.stack}`, 'error');
 
 }
 
