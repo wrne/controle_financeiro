@@ -72,7 +72,7 @@ function log(message, level = 'info') {
 			break;
 	}
 
-	const filePath = `${process.ccab_conecta.log_path}/${system}_${dateForLog}${queue ? '_wh' : ''}.log`;
+	const filePath = `${process.env.LOG_PATH}/${system}_${dateForLog}${queue ? '_wh' : ''}.log`;
 	fs.mkdirSync(path.dirname(filePath), { recursive: true });
 	fs.appendFileSync(filePath, line + '\n');
 
@@ -80,7 +80,7 @@ function log(message, level = 'info') {
 
 export function logError(errorMessage, error) {
 
-	log(`errorMessage: ${errorMessage}\nDetails: ${error.stack}`, 'error');
+	log(`errorMessage: ${errorMessage}\nDetails: ${error.cause} \nStack:${error.stack}`, 'error');
 
 }
 

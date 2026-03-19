@@ -10,13 +10,13 @@ router.get('/test', async (req, res) => {
 
 	try {
 
-		res.success({ message: 'Rota de teste' }, 'Rota de teste funcionando.')
 		counter++
-
+		
 		if (counter >= 3) {
 			counter = 0
 			throw new Error('Limite de acessos atingido. Tente novamente mais tarde.')
 		}
+		res.success({ message: 'Rota de teste' }, 'Rota de teste funcionando.')
 
 	} catch (error) {
 
