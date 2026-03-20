@@ -1,52 +1,14 @@
-import { AsyncLocalStorage } from 'node:async_hooks';
 import fs from 'fs';
 import path from 'path';
-import crypto from 'crypto';
-
-const asyncLocalStorage = new AsyncLocalStorage();
-
-/**
- * Cria o contexto de logger para requisições Express. DEfine um ID único para cada requisição e extrai o nome do sistema pela URL para separação e organização dos logs.
- * @param {*} req 
- * @param {*} res 
- * @param {*} next 
- */
-export function createExpressLoggerContext(req, res, next) {
-	const requestId = crypto.randomUUID().substring(0,8);
-
-	// extrai o nome do sistema pela URL: /abc/... → "abc"
-	const systemName = req.path.split('/')[1] || 'unknown';
-
-	asyncLocalStorage.run({ requestId, systemName }, () => next());
-}
-
-/**
- * Cria o contexto de logger para processamento de webhooks (workers / RabbitMQ).
- * Cada mensagem processada cria um contexto isolado.
- * @param {Object} params
- * @param {String} params.queueName Nome da fila do RabbitMQ
- * @param {String} [params.systemName] Sistema de origem (opcional)
- * @param {Function} handler Função async que processa a mensagem
- */
-export function createWebhookLoggerContext({ queueName, systemName = 'webhook' }, handler) {
-	const requestId = crypto.randomUUID().substring(0, 8);
-
-	const context = {
-		requestId,
-		systemName,
-		queueName
-	};
-
-	return asyncLocalStorage.run(context, handler);
-}
+import { getStorage } from './context-utils.js';
 
 /**
  * Cria uma entrada de log formatada e grava no arquivo de log do sistema correspondente.
  * @param {String} message texto a ser gravado no log
  * @param {String} level define o nivel do log: debug, info, warning, error, etc
  */
-function log(message, level = 'info') {
-	const store = asyncLocalStorage.getStore();
+async function log(message, level = 'info') {
+	const store = await getStorage();
 	const threadId = store?.requestId || 'no-thread';
 	const system = store?.systemName || 'general';
 	const queue = store?.queueName ? ` - queue:${store.queueName}` : '';
@@ -78,27 +40,27 @@ function log(message, level = 'info') {
 
 }
 
-export function logError(errorMessage, error) {
+export async function logError(errorMessage, error) {
 
-	log(`errorMessage: ${errorMessage}\n${(!!error.cause ? `Details: ${error.cause}\n` : '')}Stack:${error.stack}`, 'error');
-
-}
-
-export function logInfo(message) {
-
-	log(message, 'info');
+	await log(`errorMessage: ${errorMessage}\n${(!!error.cause ? `Details: ${error.cause}\n` : '')}Stack:${error.stack}`, 'error');
 
 }
 
-export function logDebug(message) {
+export async function logInfo(message) {
 
-	log(message, 'debug');
+	await log(message, 'info');
 
 }
 
-export function logWarn(message) {
+export async function logDebug(message) {
 
-	log(message, 'warn');
+	await log(message, 'debug');
+
+}
+
+export async function logWarn(message) {
+
+	await log(message, 'warn');
 
 }
 

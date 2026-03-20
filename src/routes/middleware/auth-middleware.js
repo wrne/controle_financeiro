@@ -1,4 +1,6 @@
 import AuthUtils from "../../utils/auth-utils.js"
+import { getStorage } from "../../utils/context-utils.js";
+import { getUserId } from "../../services/user-services.js";
 import {logInfo} from "../../utils/logger.js";
 
 /**
@@ -37,6 +39,10 @@ export default async function authMiddleware(req, res, next) {
 		if (!!login) {
 			// Adiciona os dados do usuário ao objeto `req` para uso em rotas protegidas
 			req.user = login;
+			const userId = await getUserId(login);
+			const storage = await getStorage();
+			storage.userLogin = login // Armazena o login do usuário no contexto de armazenamento
+			storage.userId = userId // Armazena o ID do usuário no contexto de armazenamento
 			next(); // Passa o controle para a próxima função ou rota
 
 		} else {

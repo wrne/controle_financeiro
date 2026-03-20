@@ -1,5 +1,5 @@
 import express from "express";
-import {createExpressLoggerContext} from "./utils/logger.js"
+import {createExpressLoggerContext} from "./utils/context-utils.js";
 import bodyParser from "body-parser";
 import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
