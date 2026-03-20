@@ -2,6 +2,7 @@ import { db } from '../infra/db/database-connection.js'
 import { logError } from '../utils/logger.js';
 import { eq } from 'drizzle-orm';
 import { budget } from '../infra/db/schemas.js';
+import { insert } from './_base-repository.js';
 
 export async function getAllBudgetRepo() {
 
@@ -35,7 +36,7 @@ export async function createBudgetRepo({ amount, category, account, period }) {
 
 	try {
 
-		const result = await db.insert(budget).values({ amount, category, account, period }).returning()
+		const result = await insert(budget, { amount, category, account, period })
 		return result[0]
 
 	} catch (error) {

@@ -2,6 +2,7 @@ import { db } from '../infra/db/database-connection.js'
 import { logError, logInfo } from '../utils/logger.js';
 import { eq } from 'drizzle-orm';
 import { accounts } from '../infra/db/schemas.js';
+import { insert } from './_base-repository.js';
 
 export async function getAllAccountsRepo(){
 
@@ -37,7 +38,7 @@ export async function createAccountRepo(name, type){
 
 	try {
 
-		const result = await db.insert(accounts).values({ name, type }).returning()
+		const result = await insert(accounts, { name, type })
 		return result[0]
 		
 	} catch (error) {

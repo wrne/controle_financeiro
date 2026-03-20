@@ -2,6 +2,8 @@ import { db } from '../infra/db/database-connection.js'
 import { logError, logInfo } from '../utils/logger.js';
 import { eq } from 'drizzle-orm';
 import { periods } from '../infra/db/schemas.js';
+import { insert } from './_base-repository.js';
+
 
 export async function getAllPeriodsRepo(){
 
@@ -37,7 +39,7 @@ export async function createPeriodRepo({ description, account, initialDate, fina
 
 	try {
 
-		const result = await db.insert(periods).values({ description, account, initialDate, finalDate }).returning()
+		const result = await insert(periods, { description, account, initialDate, finalDate })
 		return result[0]
 		
 	} catch (error) {

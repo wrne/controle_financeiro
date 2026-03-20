@@ -25,7 +25,21 @@ export async function getPasswordByLogin(login){
 		return result[0].password
 		
 	} catch (error) {
-		logError(`Error creating user: ${error.message}`,error);
+		logError(`Error querying user: ${error.message}`,error);
 		throw error;
 	}	
+}
+
+export async function getuserIdByLogin(login){
+
+	try {
+
+		const result = await db.select({id: users.id}).from(users).where(eq(users.login, login))
+		return result[0].id
+		
+	} catch (error) {
+		logError(`Error querying user: ${error.message}`,error);
+		throw error;
+	}	
+
 }

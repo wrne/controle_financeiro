@@ -2,6 +2,8 @@ import { db } from '../infra/db/database-connection.js'
 import { logError } from '../utils/logger.js';
 import { eq } from 'drizzle-orm';
 import { categories } from '../infra/db/schemas.js';
+import { insert } from './_base-repository.js';
+
 
 export async function getAllCategoriesRepo() {
 
@@ -35,7 +37,7 @@ export async function createCategoryRepo(name, type) {
 
 	try {
 
-		const result = await db.insert(categories).values({ name, type }).returning()
+		const result = await insert(categories, { name, type })
 		return result[0]
 
 	} catch (error) {

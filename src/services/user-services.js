@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 // import dbConn from "../../infra/db/database-connection.js"
-import { createUser, getPasswordByLogin} from '../repositories/user-repository.js'
+import { createUser, getPasswordByLogin, getuserIdByLogin} from '../repositories/user-repository.js'
 import AuthUtils from "../utils/auth-utils.js"
 import { logInfo } from '../utils/logger.js';
 
@@ -45,4 +45,8 @@ export async function authUser({login, password}){
 		
 	}
 	
+}
+
+export async function getUserId(login){
+	return await getuserIdByLogin(login)
 }
