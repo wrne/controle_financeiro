@@ -22,6 +22,13 @@
       "when": 1773955573291,
       "tag": "0002_lucky_butterfly",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773959707381,
+      "tag": "0003_tired_namorita",
+      "breakpoints": true
     }
   ]
 }

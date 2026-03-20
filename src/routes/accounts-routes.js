@@ -5,7 +5,7 @@ import {
 	createAccountController,
 	updateAccountController,
 	deleteAccountController
-} from "../controllers/accounts/accounts-controller.js"
+} from "../controllers/accounts-controller.js"
 
 const router = express.Router();
 

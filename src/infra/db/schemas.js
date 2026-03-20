@@ -35,7 +35,7 @@ export const users = pgTable('Users', {
  * ACCOUNTS
  */
 export const accounts = pgTable('accounts', {
-  id: uuid('id').primaryKey(),
+  id: uuid('id').defaultRandom().primaryKey(),
   name: varchar('name', { length: 40 }),
   type: integer('type'),
 
@@ -48,7 +48,7 @@ export const accounts = pgTable('accounts', {
  * CATEGORIES
  */
 export const categories = pgTable('categories', {
-  id: uuid('id').primaryKey(),
+  id: uuid('id').defaultRandom().primaryKey(),
   name: varchar('name', { length: 40 }).notNull(),
   type: integer('type'),
 
@@ -59,8 +59,7 @@ export const categories = pgTable('categories', {
  * PERIODS
  */
 export const periods = pgTable('periods', {
-  id: uuid('id').primaryKey(),
-  basedate: date('basedate').notNull(),
+  id: uuid('id').defaultRandom().primaryKey(),
   description: varchar('description', { length: 40 }),
 
   account: uuid('account').references(() => accounts.id),
@@ -78,7 +77,7 @@ export const periods = pgTable('periods', {
  * BUDGET
  */
 export const budget = pgTable('budget', {
-  id: uuid('id').primaryKey(),
+  id: uuid('id').defaultRandom().primaryKey(),
 
   amount: numeric('amount', { precision: 10, scale: 2 })
     .default('0')
@@ -103,7 +102,7 @@ export const budget = pgTable('budget', {
  * TRANSACTIONS
  */
 export const transactions = pgTable('transactions', {
-  id: uuid('id').primaryKey(),
+  id: uuid('id').defaultRandom().primaryKey(),
 
   date: date('date').notNull(),
 
