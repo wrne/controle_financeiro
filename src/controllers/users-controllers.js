@@ -1,5 +1,5 @@
-import {newUser, authUser} from "../../services/user-services.js"
-import { logInfo } from '../../utils/logger.js';
+import {newUser, authUser} from "../services/user-services.js"
+import { logInfo } from '../utils/logger.js';
 
 export async function newUserController(req, res) {
 	

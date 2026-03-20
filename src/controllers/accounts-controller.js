@@ -1,5 +1,5 @@
-import { logInfo } from "../../utils/logger.js"
-import { getAllAccounts, getAccount, createAccount, updateAccount, deleteAccount } from "../../services/accounts-services.js"
+import { logInfo } from "../utils/logger.js"
+import { getAllAccounts, getAccount, createAccount, updateAccount, deleteAccount } from "../services/accounts-services.js"
 
 export async function getAllAccountsController(req, res) {
 
