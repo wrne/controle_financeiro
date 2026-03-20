@@ -3,6 +3,11 @@
 *bkp.*
 *.zip
 /Teste
+/logs
+/undefined
+*.log
+*.tmp
+*.temp
 *.gitignore
 /.vscode
 *.code-workspace
