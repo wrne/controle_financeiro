@@ -2,13 +2,13 @@ import { db } from '../infra/db/database-connection.js'
 import { logError } from '../utils/logger.js';
 import { eq } from 'drizzle-orm';
 import { budget } from '../infra/db/schemas.js';
-import { insert } from './_base-repository.js';
+import { applyUserFilter, insert } from './_base-repository.js';
 
 export async function getAllBudgetRepo() {
 
 	try {
 
-		const result = await db.select().from(budget)
+		const result = await db.select().from(budget).where(await applyUserFilter(budget))
 		return result
 
 	} catch (error) {
@@ -22,7 +22,7 @@ export async function getBudgetByIdRepo(id) {
 
 	try {
 
-		const result = await db.select().from(budget).where(eq(budget.id, id))
+		const result = await db.select().from(budget).where(await applyUserFilter(budget, eq(budget.id, id)))
 		return result[0]
 
 	} catch (error) {
@@ -50,7 +50,7 @@ export async function deleteBudgetRepo(id) {
 
 	try {
 
-		const result = await db.delete(budget).where(eq(budget.id, id)).returning()
+		const result = await db.delete(budget).where(await applyUserFilter(budget, eq(budget.id, id))).returning()
 		return result[0]
 
 	} catch (error) {

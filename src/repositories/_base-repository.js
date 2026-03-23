@@ -1,4 +1,5 @@
 import { db } from '../infra/db/database-connection.js'
+import { and, eq } from 'drizzle-orm';
 import { getStorage } from '../utils/context-utils.js';
 
 export async function withUser(data){
@@ -13,10 +14,10 @@ export async function insert(table, data){
 	return await db.insert(table).values(dataWithUser).returning();
 }
 
-export async function applyUserFilter(condition) {
+export async function applyUserFilter(table, condition = null) {
 
 	const {userId} = await getStorage();
-    return condition
-      ? and(condition, eq(this.userId, userId))
-      : eq(this.userId, userId)
-  }
+	return condition
+		? and(condition, eq(table.userId, userId))
+		: eq(table.userId, userId)
+}

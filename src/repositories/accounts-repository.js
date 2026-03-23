@@ -2,14 +2,14 @@ import { db } from '../infra/db/database-connection.js'
 import { logError, logInfo } from '../utils/logger.js';
 import { eq } from 'drizzle-orm';
 import { accounts } from '../infra/db/schemas.js';
-import { insert } from './_base-repository.js';
+import { applyUserFilter, insert } from './_base-repository.js';
 
 export async function getAllAccountsRepo(){
 
 	try {
 
 		// const result = db.insert(user).values({ id: uudi, login, name, password: `${hash}:${salt}` }).returning()
-		const result = await db.select().from(accounts)
+		const result = await db.select().from(accounts).where(await applyUserFilter(accounts))
 		return result
 		
 	} catch (error) {
@@ -24,7 +24,7 @@ export async function getAccountByIdRepo(id){
 	try {
 
 		// const result = db.insert(user).values({ id: uudi, login, name, password: `${hash}:${salt}` }).returning()
-		const result = await db.select().from(accounts).where(eq(accounts.id, id))
+		const result = await db.select().from(accounts).where(await applyUserFilter(accounts, eq(accounts.id, id)))
 		return result[0]
 		
 	} catch (error) {
@@ -52,7 +52,7 @@ export async function deleteAccountRepo(id){
 
 	try {
 
-		const result = await db.delete(accounts).where(eq(accounts.id, id)).returning()
+		const result = await db.delete(accounts).where(await applyUserFilter(accounts, eq(accounts.id, id))).returning()
 		return result[0]
 		
 	} catch (error) {

@@ -2,7 +2,7 @@ import { db } from '../infra/db/database-connection.js'
 import { logError, logInfo } from '../utils/logger.js';
 import { eq } from 'drizzle-orm';
 import { periods } from '../infra/db/schemas.js';
-import { insert } from './_base-repository.js';
+import { applyUserFilter, insert } from './_base-repository.js';
 
 
 export async function getAllPeriodsRepo(){
@@ -10,7 +10,7 @@ export async function getAllPeriodsRepo(){
 	try {
 
 		// const result = db.insert(user).values({ id: uudi, login, name, password: `${hash}:${salt}` }).returning()
-		const result = await db.select().from(periods)
+		const result = await db.select().from(periods).where(await applyUserFilter(periods))
 		return result
 		
 	} catch (error) {
@@ -25,7 +25,7 @@ export async function getPeriodByIdRepo(id){
 	try {
 
 		// const result = db.insert(user).values({ id: uudi, login, name, password: `${hash}:${salt}` }).returning()
-		const result = await db.select().from(periods).where(eq(periods.id, id))
+		const result = await db.select().from(periods).where(await applyUserFilter(periods, eq(periods.id, id)))
 		return result[0]
 		
 	} catch (error) {
@@ -53,7 +53,7 @@ export async function deletePeriodRepo(id){
 
 	try {
 
-		const result = await db.delete(periods).where(eq(periods.id, id)).returning()
+		const result = await db.delete(periods).where(await applyUserFilter(periods, eq(periods.id, id))).returning()
 		return result[0]
 		
 	} catch (error) {
