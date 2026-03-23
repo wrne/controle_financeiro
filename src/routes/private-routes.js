@@ -9,6 +9,7 @@ import accountsRoute from "./accounts-routes.js"
 import periodsRoute from "./periods-routes.js"
 import budgetRoute from "./budget-routes.js"
 import categoriesRoute from "./categories-routes.js"
+import transactionsRoute from "./transactions-routes.js"
 
 const router = express.Router();
 
@@ -19,6 +20,7 @@ router.use(accountsRoute); // Rotas de Contas
 router.use(periodsRoute); // Rotas de Periodos
 router.use(budgetRoute); // Rotas de Budget
 router.use(categoriesRoute); // Rotas de Categorias
+router.use(transactionsRoute); // Rotas de Transactions
 // router.use(ordersRoute);
 
 router.post('/newUser',autorizateMiddleware(['admin']), newUserController);
