@@ -1,0 +1,518 @@
+{
+	"openapi": "3.0.1",
+	"info": {
+		"title": "Summer by CCAB",
+		"version": "1.0.0",
+		"description": "API de integração com o ERP da CCAB",
+		"contact": {
+			"name": "CCAB",
+			"email": "suporte@ccab-agro.com.br"
+		}
+	},
+	"servers": [
+		{
+			"url": "http://localhost:3000",
+			"description": "Development Local server "
+		},
+		{
+			"url": "https://api.ccab-agro.net",
+			"description": "Production server"
+		}
+	],
+	"paths": {
+		"/orders": {
+			"get": {
+				"summary": "Get all orders",
+				"description": "Get the sales orders from the ERP.",
+				"tags": [
+					"Orders"
+				],
+				"parameters": [
+					{
+						"name": "pageSize",
+						"in": "query",
+						"description": "The number of orders to return",
+						"required": false,
+						"schema": {
+							"type": "integer",
+							"minimum": 1
+						}
+					},
+					{
+						"name": "pageNumber",
+						"in": "query",
+						"description": "Control of pagination on search by orders to return",
+						"required": false,
+						"schema": {
+							"type": "integer",
+							"minimum": 1
+						}
+					},
+					{
+						"name": "orderNumber",
+						"in": "query",
+						"description": "Filter orders by ID",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "client",
+						"in": "query",
+						"description": "Filter orders by client ID",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "emitDate",
+						"in": "query",
+						"description": "Filter orders by create data. (Format: YYYYMMDD)",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "priceTable",
+						"in": "query",
+						"description": "Filter orders by price table.",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A list of orders according to the filters parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/OrderNoItems"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/orders/items": {
+			"get": {
+				"summary": "Get all orders",
+				"description": "Get the sales orders from the ERP.",
+				"tags": [
+					"Orders"
+				],
+				"parameters": [
+					{
+						"name": "pageSize",
+						"in": "query",
+						"description": "The number of orders to return",
+						"required": false,
+						"schema": {
+							"type": "integer",
+							"minimum": 1
+						}
+					},
+					{
+						"name": "pageNumber",
+						"in": "query",
+						"description": "Control of pagination on search by orders to return",
+						"required": false,
+						"schema": {
+							"type": "integer",
+							"minimum": 1
+						}
+					},
+					{
+						"name": "orderNumber",
+						"in": "query",
+						"description": "Filter orders by ID",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "client",
+						"in": "query",
+						"description": "Filter orders by client ID",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "emitDate",
+						"in": "query",
+						"description": "Filter orders by create data. (Format: YYYYMMDD)",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "priceTable",
+						"in": "query",
+						"description": "Filter orders by price table.",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A list of orders according to the filters parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/Order"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/orders/:id": {
+			"get": {
+				"summary": "Get a order by ID",
+				"description": "Get a sales order from the ERP by ID.",
+				"tags": [
+					"Orders"
+				],
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"description": "The ID of searched order",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"minimum": 1
+						}
+					}
+				],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A order according to the id parameter",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/OrderNoItems"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/orders/:id/items": {
+			"get": {
+				"summary": "Get a order by ID with Items",
+				"description": "Get a sales order from the ERP by ID.",
+				"tags": [
+					"Orders"
+				],
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"description": "The ID of searched order",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"minimum": 1
+						}
+					}
+				],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A order according to the id parameter",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Order"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/credit": {
+			"get": {
+				"summary": "Get credit limits",
+				"description": "Get credit limits of all the economic groups",
+				"tags": [
+					"Credit"
+				],
+				"parameters": [
+					{
+						"name": "pageSize",
+						"in": "query",
+						"description": "The number of registries to return",
+						"required": false,
+						"schema": {
+							"type": "integer",
+							"minimum": 1
+						}
+					},
+					{
+						"name": "pageNumber",
+						"in": "query",
+						"description": "Control of pagination on search",
+						"required": false,
+						"schema": {
+							"type": "integer",
+							"minimum": 1
+						}
+					},
+					{
+						"name": "group",
+						"in": "query",
+						"description": "Filter ordelimit credits  by ID of economic group",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "crop",
+						"in": "query",
+						"description": "Filter a limit of a specific crop. (Format: YYYY/YYYY). Default is the current crop.",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A list of limit credit according to the filters parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/CreditLimit"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/credit/:group": {
+			"get": {
+				"summary": "Credit limit of a group",
+				"description": "Get credit limit of a specific economic group",
+				"tags": [
+					"Credit"
+				],
+				"parameters": [
+					{
+						"name": "crop",
+						"in": "query",
+						"description": "Filter a limit of a specific crop. (Format: YYYY/YYYY). Default is the current crop.",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "The limit credit according to the economic group informed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/CreditLimit"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/login": {
+			"post": {
+				"summary": "Login for testing",
+				"description": "Authenticate user for testing purposes.",
+				"tags": [
+					"Authentication"
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"username": {
+										"type": "string",
+										"description": "User's username"
+									},
+									"password": {
+										"type": "string",
+										"description": "User's password"
+									}
+								},
+								"required": [
+									"username",
+									"password"
+								]
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Successful login",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"token": {
+											"type": "string",
+											"description": "Authentication token"
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized"
+					}
+				}
+			}
+		}
+	},
+	"components": {
+		"schemas": {
+			"OrderItem": {
+				"type": "object",
+				"properties": {
+					"product": {
+						"type": "string"
+					},
+					"amout": {
+						"type": "integer"
+					},
+					"value": {
+						"type": "number"
+					}
+				}
+			},
+			"Order": {
+				"type": "object",
+				"properties": {
+					"orderNumber": {
+						"type": "string"
+					},
+					"emitDate": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"customerStore": {
+						"type": "string"
+					},
+					"items": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/OrderItem"
+						}
+					}
+				}
+			},
+			"OrderNoItems": {
+				"type": "object",
+				"properties": {
+					"orderNumber": {
+						"type": "string"
+					},
+					"emitDate": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"customerStore": {
+						"type": "string"
+					}
+				}
+			},
+			"CreditLimit": {
+				"type": "object",
+				"properties": {
+					"group": {
+						"type": "string"
+					},
+					"currency": {
+						"type": "string"
+					},
+					"actualLimit": {
+						"type": "number"
+					}
+				}
+			}
+		},
+		"securitySchemes": {
+			"bearerAuth": {
+				"type": "http",
+				"scheme": "bearer",
+				"bearerFormat": "JWT"
+			}
+		}
+	},
+	"security": [
+		{
+			"bearerAuth": []
+		}
+	]
+}

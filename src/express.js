@@ -5,9 +5,9 @@ import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
 import swaggerDocument from "./swagger.json"  with { type: 'json' };;
 
-import privateRoutes from "./routes/private-routes.js";
-import publichRoutes from "./routes/public-routes.js";
-import responseFormatter from "./routes/middleware/return-messages-middleware.js"
+import privateRoutes from "./modules/private-routes.js";
+import publichRoutes from "./modules/public-routes.js";
+import responseFormatter from "./modules/middleware/return-messages-middleware.js"
 
 const app = express();
 

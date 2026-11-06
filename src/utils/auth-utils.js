@@ -41,27 +41,4 @@ async function verifyTokenJWT(tokenToValidate){
 
 }
 
-
-/**
- * Retorna o papel do usuário cadastrado na base
- * @param {caracter} login 
- * @returns role - papel do usuario cadastrado na base
- */
-async function getRolebyUser(login){
-
-	const conn = new dbConn()
-
-	// Busca no banco de dados o papel do usuário informado
-	const queryStt = `
-	Select role
-	  From ccab_conecta_users users
-	 Where login = '${login}'
-	`
-
-	const [result] = await conn.query(queryStt)
-
-	return result.role;
-
-}
-
-export default {buildHashPwdAndSalt, validPassword, gerarTokenJWT, verifyTokenJWT, getRolebyUser}
+export default {buildHashPwdAndSalt, validPassword, gerarTokenJWT, verifyTokenJWT}
