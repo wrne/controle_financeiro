@@ -6,17 +6,15 @@ import {
 	updateAccountController,
 	deleteAccountController
 } from "../controllers/accounts-controller.js"
+import { validate, idParams } from "../../../utils/validate.js"
+import { createAccountSchema, updateAccountSchema } from "../accounts-schemas.js"
 
 const router = express.Router();
 
-/**
- * Rota de Consulta de pedidos - Listagem de acordo com os filtros
- */
-router.get('/accounts', getAllAccountsController); // Consulta de Contas de acordo com os filtros
-router.get('/accounts/:id', getAccountController); // Consulta de Conta especifíca
-router.post('/accounts', createAccountController); // Criação de Conta
-// router.put('/accounts/:id', updateAccountController); // Atualização de Conta
-router.delete('/accounts/:id', deleteAccountController); // Exclusão de Conta
-
+router.get('/accounts', getAllAccountsController); // Listagem
+router.get('/accounts/:id', validate({ params: idParams }), getAccountController); // Consulta específica
+router.post('/accounts', validate({ body: createAccountSchema }), createAccountController); // Criação
+router.put('/accounts/:id', validate({ params: idParams, body: updateAccountSchema }), updateAccountController); // Atualização (envie apenas os campos a alterar)
+router.delete('/accounts/:id', validate({ params: idParams }), deleteAccountController); // Exclusão
 
 export default router;

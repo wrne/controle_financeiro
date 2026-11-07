@@ -3,7 +3,8 @@ import {newUserController} from "./users/controllers/users-controllers.js"
 import authMiddleware from "./middleware/auth-middleware.js"
 import autorizateMiddleware from "./middleware/autorization-middleware.js"
 import loggerMiddleware from "./middleware/logger-middleware.js"
-import { logInfo } from "../utils/logger.js";
+import { validate } from "../utils/validate.js"
+import { newUserSchema } from "./users/users-schemas.js"
 
 import accountsRoute from "./accounts/routes/accounts-routes.js"
 import periodsRoute from "./periods/routes/periods-routes.js"
@@ -23,7 +24,7 @@ router.use(categoriesRoute); // Rotas de Categorias
 router.use(transactionsRoute); // Rotas de Transactions
 // router.use(ordersRoute);
 
-router.post('/newUser',autorizateMiddleware(['admin']), newUserController);
+router.post('/newUser', autorizateMiddleware(['admin']), validate({ body: newUserSchema }), newUserController);
 
 
 export default router;

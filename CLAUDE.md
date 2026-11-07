@@ -30,6 +30,7 @@ Multiusuário só para separar os dados de cada login (uso pessoal e familiar). 
 - Backend: Node 22 (ESM, `"type": "module"`), Express 4, PostgreSQL (Neon, banco de teste), Drizzle ORM, JWT (Bearer), `zod` v3 para validação.
 - `npm run dev` sobe a API com nodemon; `npm start` sobe sem nodemon.
 - `npm run generate` gera migration a partir de `src/infra/db/schemas.js`; `npm run migrate` aplica no banco.
+- `npm run set-password -- <login>` troca a senha de um usuário pelo terminal (entrada oculta; só funciona em terminal interativo).
 - Variáveis de ambiente (ver `.env.example`): `DATABASE_URL`, `SEGREDO_JWT`, `PORT`, `LOG_PATH`; opcionais `CORS_ORIGINS` e `TRUST_PROXY`. O `server.js` falha na partida se faltar `DATABASE_URL` ou `SEGREDO_JWT`.
 - Não existem testes automatizados ainda. Ao criar lógica de negócio nova (importador, normalização, relatórios), criar testes junto.
 - Documentação da API em `/docs` (Swagger), a partir de `src/swagger.json`, mantido à mão: atualizar sempre que uma rota mudar.

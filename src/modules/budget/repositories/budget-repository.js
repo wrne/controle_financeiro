@@ -1,14 +1,20 @@
 import { db } from '../../../infra/db/database-connection.js'
 import { logError } from '../../../utils/logger.js';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { budget } from '../../../infra/db/schemas.js';
-import { applyUserFilter, insert } from '../../../infra/repositories/_base-repository.js';
+import { applyUserFilter, insert, updateById } from '../../../infra/repositories/_base-repository.js';
 
-export async function getAllBudgetRepo() {
+export async function getAllBudgetRepo({ period, account, category } = {}) {
 
 	try {
 
-		const result = await db.select().from(budget).where(await applyUserFilter(budget))
+		const conditions = []
+		if (period) conditions.push(eq(budget.period, period))
+		if (account) conditions.push(eq(budget.account, account))
+		if (category) conditions.push(eq(budget.category, category))
+
+		const where = await applyUserFilter(budget, conditions.length ? and(...conditions) : null)
+		const result = await db.select().from(budget).where(where)
 		return result
 
 	} catch (error) {
@@ -41,6 +47,19 @@ export async function createBudgetRepo({ amount, category, account, period }) {
 
 	} catch (error) {
 		logError(`Error creating budget: ${error.message}`, error);
+		throw error;
+	}
+
+}
+
+export async function updateBudgetRepo(id, data) {
+
+	try {
+
+		return await updateById(budget, id, data)
+
+	} catch (error) {
+		logError(`Error updating budget: ${error.message}`, error);
 		throw error;
 	}
 

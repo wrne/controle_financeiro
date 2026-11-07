@@ -29,7 +29,9 @@ export const users = pgTable('Users', {
   login: varchar('login', { length: 50 }).notNull(),
 
   ...timestamps
-})
+}, (table) => ({
+  loginUq: uniqueIndex('users_login_uq').on(table.login)
+}))
 
 /**
  * ACCOUNTS

@@ -6,17 +6,15 @@ import {
 	updateTransactionController,
 	deleteTransactionController
 } from "../controllers/transactions-controller.js"
+import { validate, idParams } from "../../../utils/validate.js"
+import { createTransactionSchema, updateTransactionSchema, transactionFilters } from "../transactions-schemas.js"
 
 const router = express.Router();
 
-/**
- * Rota de Consulta de Transactions - Listagem de acordo com os filtros
- */
-router.get('/transactions', getAllTransactionsController); // Consulta de Transactions de acordo com os filtros
-router.get('/transactions/:id', getTransactionController); // Consulta de Transaction específica
-router.post('/transactions', createTransactionController); // Criação de Transaction
-// router.put('/transactions/:id', updateTransactionController); // Atualização de Transaction
-router.delete('/transactions/:id', deleteTransactionController); // Exclusão de Transaction
-
+router.get('/transactions', validate({ query: transactionFilters }), getAllTransactionsController); // Listagem (aceita filtros via query string)
+router.get('/transactions/:id', validate({ params: idParams }), getTransactionController); // Consulta específica
+router.post('/transactions', validate({ body: createTransactionSchema }), createTransactionController); // Criação
+router.put('/transactions/:id', validate({ params: idParams, body: updateTransactionSchema }), updateTransactionController); // Atualização (envie apenas os campos a alterar)
+router.delete('/transactions/:id', validate({ params: idParams }), deleteTransactionController); // Exclusão
 
 export default router;

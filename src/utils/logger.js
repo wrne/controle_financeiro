@@ -34,15 +34,24 @@ async function log(message, level = 'info') {
 			break;
 	}
 
-	const filePath = `${process.env.LOG_PATH}/${system}_${dateForLog}${queue ? '_wh' : ''}.log`;
+	const logDir = process.env.LOG_PATH || './logs';
+	const filePath = `${logDir}/${system}_${dateForLog}${queue ? '_wh' : ''}.log`;
 	fs.mkdirSync(path.dirname(filePath), { recursive: true });
 	fs.appendFileSync(filePath, line + '\n');
 
 }
 
+/**
+ * Remove os parâmetros de queries que falharam ("params: ..."), pois podem conter dados sensíveis (ex.: hash de senha).
+ */
+function redactSqlParams(text) {
+	return String(text).replace(/params:[^\n]*/g, 'params: [redacted]');
+}
+
 export async function logError(errorMessage, error) {
 
-	await log(`errorMessage: ${errorMessage}\n${(!!error.cause ? `Details: ${error.cause}\n` : '')}Stack:${error.stack}`, 'error');
+	const details = !!error?.cause ? `Details: ${redactSqlParams(error.cause)}\n` : '';
+	await log(`errorMessage: ${redactSqlParams(errorMessage)}\n${details}Stack:${redactSqlParams(error?.stack)}`, 'error');
 
 }
 

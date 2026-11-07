@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "users_login_uq" ON "Users" USING btree ("login");

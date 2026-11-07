@@ -18,6 +18,9 @@ function validPassword(passwordTested, salt, password){
 	// Para fazer a comparação dos hash, precisamos comparar os Buffers
 	const hashReal = Buffer.from(password, "hex");
 
+	// timingSafeEqual lança erro se os tamanhos forem diferentes (ex.: hash armazenado corrompido)
+	if (hashTest.length !== hashReal.length) return false;
+
 	const isAuth = timingSafeEqual(hashTest, hashReal);
 
 	return isAuth;
@@ -26,7 +29,7 @@ function validPassword(passwordTested, salt, password){
 
 function gerarTokenJWT(data) {
 
-	const tokenJwt = jwt.sign(data, process.env.SEGREDO_JWT, { expiresIn: "1h" })
+	const tokenJwt = jwt.sign(data, process.env.SEGREDO_JWT, { algorithm: "HS256", expiresIn: "1h" })
 
 	return {token: tokenJwt};
 
@@ -36,7 +39,7 @@ function gerarTokenJWT(data) {
 async function verifyTokenJWT(tokenToValidate){
 
 	// traduz token recebido e deve conter propriedade com o login
-	const dataToken = await jwt.verify(tokenToValidate, process.env.SEGREDO_JWT)
+	const dataToken = await jwt.verify(tokenToValidate, process.env.SEGREDO_JWT, { algorithms: ["HS256"] })
 	return dataToken;	
 
 }

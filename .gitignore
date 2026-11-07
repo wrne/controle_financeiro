@@ -8,7 +8,6 @@
 *.log
 *.tmp
 *.temp
-*.gitignore
 /.vscode
 *.code-workspace
 *.drawio*
@@ -16,6 +15,12 @@
 *.BAK
 .DS_Store
 node_modules
-.env
-package-lock.json
+.env*
+!.env.example
 .idea
+
+# Dados pessoais: fatura do cartão e planilha de planejamento ficam fora do git
+*.xlsx
+*.xls
+*.csv
+/dados

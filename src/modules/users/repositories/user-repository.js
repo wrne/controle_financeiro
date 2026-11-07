@@ -22,7 +22,7 @@ export async function getPasswordByLogin(login){
 	try {
 
 		const result = await db.select({password: users.password}).from(users).where(eq(users.login, login))
-		return result[0].password
+		return result[0]?.password
 		
 	} catch (error) {
 		logError(`Error querying user: ${error.message}`,error);
@@ -35,7 +35,7 @@ export async function getuserIdByLogin(login){
 	try {
 
 		const result = await db.select({id: users.id}).from(users).where(eq(users.login, login))
-		return result[0].id
+		return result[0]?.id
 		
 	} catch (error) {
 		logError(`Error querying user: ${error.message}`,error);
@@ -48,7 +48,7 @@ export async function getRolebyUser(login){
 	try {
 
 		const result = await db.select({role: users.role}).from(users).where(eq(users.login, login))
-		return result[0].role
+		return result[0]?.role
 		
 	} catch (error) {
 		logError(`Error querying user: ${error.message}`,error);

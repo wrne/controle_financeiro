@@ -1,28 +1,14 @@
 import express from "express";
 import {authUserController} from "./users/controllers/users-controllers.js"
+import { validate } from "../utils/validate.js"
+import { loginSchema } from "./users/users-schemas.js"
+import { loginLimiter } from "./middleware/rate-limit-middleware.js"
 
 const router = express.Router();
 
-router.post('/login', authUserController);
+router.post('/login', loginLimiter, validate({ body: loginSchema }), authUserController);
 
-let counter = 0
-router.get('/test', async (req, res) => {
+// Verificação de saúde (útil para hospedagem/monitoramento). Não exige autenticação.
+router.get('/health', (req, res) => res.success({ status: 'ok' }, 'API online.'));
 
-	try {
-
-		counter++
-		
-		if (counter >= 3) {
-			counter = 0
-			throw new Error('Limite de acessos atingido. Tente novamente mais tarde.')
-		}
-		res.success({ message: 'Rota de teste' }, 'Rota de teste funcionando.')
-
-	} catch (error) {
-
-		res.error(500, error, `Erro na rota de teste`)
-
-	}
-
-});
 export default router;

@@ -6,17 +6,15 @@ import {
 	updateCategoryController,
 	deleteCategoryController
 } from "../controllers/categories-controller.js"
+import { validate, idParams } from "../../../utils/validate.js"
+import { createCategorySchema, updateCategorySchema } from "../categories-schemas.js"
 
 const router = express.Router();
 
-/**
- * Rota de Consulta de Categorias - Listagem de acordo com os filtros
- */
-router.get('/categories', getAllCategoriesController); // Consulta de Categorias de acordo com os filtros
-router.get('/categories/:id', getCategoryController); // Consulta de Categoria específica
-router.post('/categories', createCategoryController); // Criação de Categoria
-// router.put('/categories/:id', updateCategoryController); // Atualização de Categoria
-router.delete('/categories/:id', deleteCategoryController); // Exclusão de Categoria
-
+router.get('/categories', getAllCategoriesController); // Listagem
+router.get('/categories/:id', validate({ params: idParams }), getCategoryController); // Consulta específica
+router.post('/categories', validate({ body: createCategorySchema }), createCategoryController); // Criação
+router.put('/categories/:id', validate({ params: idParams, body: updateCategorySchema }), updateCategoryController); // Atualização (envie apenas os campos a alterar)
+router.delete('/categories/:id', validate({ params: idParams }), deleteCategoryController); // Exclusão
 
 export default router;

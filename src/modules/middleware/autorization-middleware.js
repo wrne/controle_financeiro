@@ -1,4 +1,5 @@
 import { getRolebyUser } from '../users/repositories/user-repository.js';
+import { AppError } from '../../utils/app-error.js';
 
 /**
  * Middlweware de autorização - Verifica se o usuário tem permissão para acessar a rota solicitada.
@@ -7,19 +8,19 @@ import { getRolebyUser } from '../users/repositories/user-repository.js';
  */
 export default function autorizateMiddleware(allowedRoles) {
   return async (req, res, next) => {
-	try {
-		// Obtem o role do usuário
-		const userRole = await getRolebyUser(req.user)
-		if (!allowedRoles.includes(userRole)) {
-	
-			throw new Error('Route not allowed to this user');
-		}
-		req.userRole = userRole; // Armazena para uso nas rotas
-		next();
-		
-	} catch (error) {
-		return res.error(401, error, 'Not autorized');
-		
-	}
+    try {
+        // Obtem o role do usuário
+        const userRole = await getRolebyUser(req.user)
+        if (!allowedRoles.includes(userRole)) {
+
+            throw new AppError(403, 'Route not allowed to this user.');
+        }
+        req.userRole = userRole; // Armazena para uso nas rotas
+        next();
+
+    } catch (error) {
+        return res.error(403, error, 'Forbidden');
+
+    }
   };
 }

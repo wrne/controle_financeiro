@@ -2,8 +2,7 @@ import { db } from '../../../infra/db/database-connection.js'
 import { logError } from '../../../utils/logger.js';
 import { eq } from 'drizzle-orm';
 import { categories } from '../../../infra/db/schemas.js';
-import { applyUserFilter, insert } from '../../../infra/repositories/_base-repository.js';
-
+import { applyUserFilter, insert, updateById } from '../../../infra/repositories/_base-repository.js';
 
 export async function getAllCategoriesRepo() {
 
@@ -33,7 +32,7 @@ export async function getCategoryByIdRepo(id) {
 
 }
 
-export async function createCategoryRepo(name, type) {
+export async function createCategoryRepo({ name, type }) {
 
 	try {
 
@@ -42,6 +41,19 @@ export async function createCategoryRepo(name, type) {
 
 	} catch (error) {
 		logError(`Error creating category: ${error.message}`, error);
+		throw error;
+	}
+
+}
+
+export async function updateCategoryRepo(id, data) {
+
+	try {
+
+		return await updateById(categories, id, data)
+
+	} catch (error) {
+		logError(`Error updating category: ${error.message}`, error);
 		throw error;
 	}
 

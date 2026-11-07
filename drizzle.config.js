@@ -1,4 +1,5 @@
-console.log(`Connection string: ${process.env.DATABASE_URL}`)
+import 'dotenv/config'
+
 export default {
   schema: './src/infra/db/schemas.js',
   out: './migrations',
