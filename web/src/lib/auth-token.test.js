@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readToken, sessionCookieOptions, safeNextPath } from './auth-token.js'
+import { readToken, decodeToken, sessionCookieOptions, safeNextPath } from './auth-token.js'
 
 const NOW = Date.UTC(2026, 10, 7, 12, 0, 0)
 const nowSeconds = NOW / 1000
@@ -47,4 +47,11 @@ test('safeNextPath: só aceita caminho interno', () => {
 	for (const bad of [undefined, null, 42, '', 'orcamento', '//evil.com', '/\\evil.com', 'https://evil.com', '/login', '/login?next=/x', '/api/categories', '/a\nb']) {
 		assert.equal(safeNextPath(bad), '/', `safeNextPath(${JSON.stringify(bad)})`)
 	}
+})
+
+test('decodeToken: lê o payload sem olhar a validade (para a renderização)', () => {
+	const expired = fakeJwt({ login: 'wrne', exp: nowSeconds - 3600 })
+	assert.deepEqual(decodeToken(expired), { login: 'wrne', exp: nowSeconds - 3600 })
+	assert.equal(readToken(expired, NOW), null, 'readToken continua recusando o vencido')
+	for (const bad of [undefined, '', 'a.b', fakeJwt({ exp: 1 }), fakeJwt({ login: 'a' })]) assert.equal(decodeToken(bad), null)
 })

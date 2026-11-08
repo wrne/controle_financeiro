@@ -1,15 +1,24 @@
 import { z } from 'zod'
-import { atLeastOneField } from '../../utils/validate.js'
+import { uuid, atLeastOneField, queryBoolean } from '../../utils/validate.js'
 
-// `type` ainda não tem significado definido; a Entrega 1 substitui por grupos de categoria.
-const categoryType = z.number().int().min(0).max(99)
+const name = z.string().trim().min(1).max(40)
+const sortOrder = z.number().int().min(0).max(9999)
 
 export const createCategorySchema = z.object({
-	name: z.string().trim().min(1).max(40),
-	type: categoryType.default(1)
+	groupId: uuid,
+	name,
+	sortOrder: sortOrder.optional()
 })
 
+// archived: true arquiva (some das listagens e da grade, mas o histórico fica); false desarquiva.
 export const updateCategorySchema = z.object({
-	name: z.string().trim().min(1).max(40),
-	type: categoryType
+	groupId: uuid,
+	name,
+	sortOrder,
+	archived: z.boolean()
 }).partial().refine(atLeastOneField, 'at least one field is required')
+
+export const categoryFilters = z.object({
+	groupId: uuid.optional(),
+	includeArchived: queryBoolean.optional()
+})

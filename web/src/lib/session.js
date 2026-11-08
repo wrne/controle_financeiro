@@ -1,16 +1,19 @@
 import 'server-only'
 import { cookies } from 'next/headers'
-import { SESSION_COOKIE, readToken, sessionCookieOptions } from './auth-token.js'
+import { SESSION_COOKIE, decodeToken, readToken, sessionCookieOptions } from './auth-token.js'
 
-/** Token da sessão atual, ou null se ausente/vencido. Só no servidor. */
+// Na renderização não se lê o relógio (ver decodeToken): token vencido é barrado pelo proxy e, se passar,
+// o backend responde 401 e o api() manda para o login.
+
+/** Token da sessão atual, ou null se ausente/malformado. Só no servidor. */
 export async function getSessionToken() {
 	const token = (await cookies()).get(SESSION_COOKIE)?.value
-	return readToken(token) ? token : null
+	return decodeToken(token) ? token : null
 }
 
 /** Usuário da sessão atual ({ login }), ou null. Só para exibir: quem autoriza é o backend. */
 export async function getSessionUser() {
-	const session = readToken((await cookies()).get(SESSION_COOKIE)?.value)
+	const session = decodeToken((await cookies()).get(SESSION_COOKIE)?.value)
 	return session ? { login: session.login } : null
 }
 

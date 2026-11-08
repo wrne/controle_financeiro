@@ -1,74 +1,64 @@
 import { db } from '../../../infra/db/database-connection.js'
-import { logError } from '../../../utils/logger.js';
-import { eq } from 'drizzle-orm';
-import { categories } from '../../../infra/db/schemas.js';
-import { applyUserFilter, insert, updateById } from '../../../infra/repositories/_base-repository.js';
+import { and, asc, eq, isNull, max } from 'drizzle-orm'
+import { budgetItems, categories, transactions } from '../../../infra/db/schemas.js'
+import { applyUserFilter, insert, updateById } from '../../../infra/repositories/_base-repository.js'
 
-export async function getAllCategoriesRepo() {
+// Colunas devolvidas ao cliente (sem user_id).
+export const categoryColumns = {
+	id: categories.id,
+	groupId: categories.groupId,
+	name: categories.name,
+	sortOrder: categories.sortOrder,
+	archivedAt: categories.archivedAt,
+	createdAt: categories.createdAt,
+	updatedAt: categories.updatedAt
+}
 
-	try {
+export async function listCategoriesRepo({ groupId, includeArchived = false } = {}) {
+	const conditions = []
+	if (groupId) conditions.push(eq(categories.groupId, groupId))
+	if (!includeArchived) conditions.push(isNull(categories.archivedAt))
 
-		const result = await db.select().from(categories).where(await applyUserFilter(categories))
-		return result
-
-	} catch (error) {
-		logError(`Error listing categories: ${error.message}`, error);
-		throw error;
-	}
-
+	return db.select(categoryColumns).from(categories)
+		.where(await applyUserFilter(categories, conditions.length ? and(...conditions) : null))
+		.orderBy(asc(categories.sortOrder), asc(categories.name))
 }
 
 export async function getCategoryByIdRepo(id) {
-
-	try {
-
-		const result = await db.select().from(categories).where(await applyUserFilter(categories, eq(categories.id, id)))
-		return result[0]
-
-	} catch (error) {
-		logError(`Error fetching category: ${error.message}`, error);
-		throw error;
-	}
-
+	const rows = await db.select(categoryColumns).from(categories)
+		.where(await applyUserFilter(categories, eq(categories.id, id)))
+	return rows[0]
 }
 
-export async function createCategoryRepo({ name, type }) {
+export async function nextCategorySortOrderRepo(groupId) {
+	const rows = await db.select({ value: max(categories.sortOrder) }).from(categories)
+		.where(await applyUserFilter(categories, eq(categories.groupId, groupId)))
+	return (rows[0]?.value ?? 0) + 1
+}
 
-	try {
-
-		const result = await insert(categories, { name, type })
-		return result[0]
-
-	} catch (error) {
-		logError(`Error creating category: ${error.message}`, error);
-		throw error;
-	}
-
+export async function createCategoryRepo(data) {
+	const rows = await insert(categories, data)
+	return rows[0]
 }
 
 export async function updateCategoryRepo(id, data) {
+	return updateById(categories, id, data)
+}
 
-	try {
-
-		return await updateById(categories, id, data)
-
-	} catch (error) {
-		logError(`Error updating category: ${error.message}`, error);
-		throw error;
-	}
-
+/** A categoria tem orçado ou lançamentos? (nesse caso não pode ser apagada, só arquivada) */
+export async function isCategoryInUseRepo(id) {
+	const [budget, txs] = await Promise.all([
+		db.select({ id: budgetItems.id }).from(budgetItems)
+			.where(await applyUserFilter(budgetItems, eq(budgetItems.categoryId, id))).limit(1),
+		db.select({ id: transactions.id }).from(transactions)
+			.where(await applyUserFilter(transactions, eq(transactions.category, id))).limit(1)
+	])
+	return budget.length > 0 || txs.length > 0
 }
 
 export async function deleteCategoryRepo(id) {
-
-	try {
-
-		const result = await db.delete(categories).where(await applyUserFilter(categories, eq(categories.id, id))).returning()
-		return result[0]
-
-	} catch (error) {
-		logError(`Error deleting category: ${error.message}`, error);
-		throw error;
-	}
-
+	const rows = await db.delete(categories)
+		.where(await applyUserFilter(categories, eq(categories.id, id)))
+		.returning(categoryColumns)
+	return rows[0]
 }

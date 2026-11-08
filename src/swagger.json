@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Meu Controle Financeiro - API",
-    "version": "0.1.0",
+    "version": "0.3.0",
     "description": "API do controle financeiro. Respostas seguem o formato { status, message, data, error }."
   },
   "components": {
@@ -88,7 +88,7 @@
             "type": "string",
             "format": "uuid"
           },
-          "userId": {
+          "groupId": {
             "type": "string",
             "format": "uuid"
           },
@@ -96,8 +96,13 @@
             "type": "string",
             "maxLength": 40
           },
-          "type": {
+          "sortOrder": {
             "type": "integer"
+          },
+          "archivedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           },
           "createdAt": {
             "type": "string",
@@ -111,21 +116,27 @@
       },
       "CategoryInput": {
         "type": "object",
+        "required": [
+          "groupId",
+          "name"
+        ],
         "properties": {
+          "groupId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "name": {
             "type": "string",
-            "maxLength": 40
+            "maxLength": 40,
+            "description": "Único dentro do grupo"
           },
-          "type": {
+          "sortOrder": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 99,
-            "default": 1
+            "maximum": 9999,
+            "description": "Padrão: último do grupo + 1"
           }
-        },
-        "required": [
-          "name"
-        ]
+        }
       },
       "Period": {
         "type": "object",
@@ -194,73 +205,6 @@
             "nullable": true
           }
         }
-      },
-      "Budget": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "userId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "amount": {
-            "type": "string",
-            "pattern": "^-?\\d{1,8}(\\.\\d{1,2})?$",
-            "example": "150.00",
-            "description": "Valor em Reais (aceita número ou texto; sempre devolvido como texto com 2 casas). A Entrega 1 passa a usar centavos inteiros."
-          },
-          "category": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "account": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "period": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "BudgetInput": {
-        "type": "object",
-        "properties": {
-          "amount": {
-            "type": "string",
-            "pattern": "^-?\\d{1,8}(\\.\\d{1,2})?$",
-            "example": "150.00",
-            "description": "Valor em Reais (aceita número ou texto; sempre devolvido como texto com 2 casas). A Entrega 1 passa a usar centavos inteiros."
-          },
-          "category": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "account": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "period": {
-            "type": "string",
-            "format": "uuid"
-          }
-        },
-        "required": [
-          "category",
-          "account",
-          "period"
-        ]
       },
       "Transaction": {
         "type": "object",
@@ -340,6 +284,542 @@
           "category",
           "period"
         ]
+      },
+      "CategoryGroup": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "RECEITA",
+              "DESPESA"
+            ]
+          },
+          "resultClass": {
+            "type": "string",
+            "enum": [
+              "TRABALHO",
+              "BASICO",
+              "INVESTIMENTO"
+            ],
+            "nullable": true,
+            "description": "Só em grupos de despesa: define a linha do Resultado"
+          },
+          "sortOrder": {
+            "type": "integer"
+          },
+          "archivedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CategoryGroupWithCategories": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CategoryGroup"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "categories": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Category"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "CategoryGroupInput": {
+        "type": "object",
+        "required": [
+          "name",
+          "kind"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "RECEITA",
+              "DESPESA"
+            ]
+          },
+          "resultClass": {
+            "type": "string",
+            "enum": [
+              "TRABALHO",
+              "BASICO",
+              "INVESTIMENTO"
+            ],
+            "nullable": true,
+            "description": "Obrigatório em DESPESA; vazio em RECEITA"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9999,
+            "description": "Padrão: último + 1"
+          }
+        }
+      },
+      "CategoryGroupUpdate": {
+        "type": "object",
+        "description": "Todos opcionais; ao menos um. O kind não muda.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "resultClass": {
+            "type": "string",
+            "enum": [
+              "TRABALHO",
+              "BASICO",
+              "INVESTIMENTO"
+            ],
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9999
+          },
+          "archived": {
+            "type": "boolean",
+            "description": "true arquiva; false desarquiva"
+          }
+        }
+      },
+      "CategoryUpdate": {
+        "type": "object",
+        "description": "Todos opcionais; ao menos um.",
+        "properties": {
+          "groupId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "sortOrder": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9999
+          },
+          "archived": {
+            "type": "boolean",
+            "description": "true arquiva (some das listagens e da grade; o histórico fica); false desarquiva"
+          }
+        }
+      },
+      "BudgetGrid": {
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "integer"
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "RECEITA",
+                    "DESPESA"
+                  ]
+                },
+                "resultClass": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "archived": {
+                  "type": "boolean"
+                },
+                "categories": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "archived": {
+                        "type": "boolean"
+                      },
+                      "months": {
+                        "type": "array",
+                        "minItems": 12,
+                        "maxItems": 12,
+                        "items": {
+                          "type": "integer",
+                          "format": "int64",
+                          "nullable": true
+                        },
+                        "description": "Posição 0 = janeiro"
+                      },
+                      "totalCents": {
+                        "type": "integer",
+                        "format": "int64",
+                        "minimum": 0,
+                        "maximum": 9999999999999
+                      },
+                      "notes": {
+                        "type": "array",
+                        "minItems": 12,
+                        "maxItems": 12,
+                        "items": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "description": "Comentário de cada mês (posição 0 = janeiro); null = sem comentário"
+                      }
+                    }
+                  }
+                },
+                "monthTotalsCents": {
+                  "type": "array",
+                  "minItems": 12,
+                  "maxItems": 12,
+                  "items": {
+                    "type": "integer",
+                    "format": "int64",
+                    "minimum": 0,
+                    "maximum": 9999999999999
+                  },
+                  "description": "Posição 0 = janeiro"
+                },
+                "totalCents": {
+                  "type": "integer",
+                  "format": "int64",
+                  "minimum": 0,
+                  "maximum": 9999999999999
+                }
+              }
+            }
+          },
+          "totals": {
+            "type": "object",
+            "properties": {
+              "revenue": {
+                "type": "object",
+                "properties": {
+                  "monthTotalsCents": {
+                    "type": "array",
+                    "minItems": 12,
+                    "maxItems": 12,
+                    "items": {
+                      "type": "integer",
+                      "format": "int64"
+                    },
+                    "description": "Posição 0 = janeiro"
+                  },
+                  "totalCents": {
+                    "type": "integer",
+                    "format": "int64"
+                  }
+                }
+              },
+              "expense": {
+                "type": "object",
+                "properties": {
+                  "monthTotalsCents": {
+                    "type": "array",
+                    "minItems": 12,
+                    "maxItems": 12,
+                    "items": {
+                      "type": "integer",
+                      "format": "int64"
+                    },
+                    "description": "Posição 0 = janeiro"
+                  },
+                  "totalCents": {
+                    "type": "integer",
+                    "format": "int64"
+                  }
+                }
+              },
+              "balance": {
+                "type": "object",
+                "properties": {
+                  "monthTotalsCents": {
+                    "type": "array",
+                    "minItems": 12,
+                    "maxItems": 12,
+                    "items": {
+                      "type": "integer",
+                      "format": "int64"
+                    },
+                    "description": "Posição 0 = janeiro"
+                  },
+                  "totalCents": {
+                    "type": "integer",
+                    "format": "int64"
+                  }
+                },
+                "description": "Receitas − despesas"
+              }
+            }
+          }
+        }
+      },
+      "BudgetItem": {
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "year": {
+            "type": "integer"
+          },
+          "month": {
+            "type": "integer"
+          },
+          "amountCents": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "description": "null = sem orçado"
+          }
+        }
+      },
+      "BudgetItemInput": {
+        "type": "object",
+        "required": [
+          "amountCents"
+        ],
+        "properties": {
+          "amountCents": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "maximum": 9999999999999,
+            "description": "Centavos (123456 = R$ 1.234,56); null remove o orçado do mês",
+            "nullable": true
+          }
+        }
+      },
+      "BudgetReplicateInput": {
+        "type": "object",
+        "required": [
+          "categoryId",
+          "fromMonth"
+        ],
+        "properties": {
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fromMonth": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 11,
+            "description": "O valor deste mês vai para todos os seguintes, até dezembro (vazio limpa os seguintes)"
+          }
+        }
+      },
+      "BudgetReplicateResult": {
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "year": {
+            "type": "integer"
+          },
+          "months": {
+            "type": "array",
+            "minItems": 12,
+            "maxItems": 12,
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true
+            },
+            "description": "Posição 0 = janeiro"
+          }
+        }
+      },
+      "Results": {
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "integer"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "BUDGET"
+            ],
+            "description": "Entrega 1: só orçado"
+          },
+          "months": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "month": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "grossRevenueCents": {
+                      "type": "integer",
+                      "format": "int64",
+                      "description": "Receita bruta"
+                    },
+                    "workExpensesCents": {
+                      "type": "integer",
+                      "format": "int64",
+                      "description": "Despesas de trabalho"
+                    },
+                    "revenueBeforeInvestmentsCents": {
+                      "type": "integer",
+                      "format": "int64",
+                      "description": "Receita antes de investimentos"
+                    },
+                    "investmentsCents": {
+                      "type": "integer",
+                      "format": "int64",
+                      "description": "Investimentos"
+                    },
+                    "netRevenueCents": {
+                      "type": "integer",
+                      "format": "int64",
+                      "description": "Receita líquida"
+                    },
+                    "personalExpensesCents": {
+                      "type": "integer",
+                      "format": "int64",
+                      "description": "Despesas pessoais (BASICO)"
+                    },
+                    "netResultCents": {
+                      "type": "integer",
+                      "format": "int64",
+                      "description": "Resultado líquido (negativo = prejuízo)"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "total": {
+            "type": "object",
+            "properties": {
+              "grossRevenueCents": {
+                "type": "integer",
+                "format": "int64",
+                "description": "Receita bruta"
+              },
+              "workExpensesCents": {
+                "type": "integer",
+                "format": "int64",
+                "description": "Despesas de trabalho"
+              },
+              "revenueBeforeInvestmentsCents": {
+                "type": "integer",
+                "format": "int64",
+                "description": "Receita antes de investimentos"
+              },
+              "investmentsCents": {
+                "type": "integer",
+                "format": "int64",
+                "description": "Investimentos"
+              },
+              "netRevenueCents": {
+                "type": "integer",
+                "format": "int64",
+                "description": "Receita líquida"
+              },
+              "personalExpensesCents": {
+                "type": "integer",
+                "format": "int64",
+                "description": "Despesas pessoais (BASICO)"
+              },
+              "netResultCents": {
+                "type": "integer",
+                "format": "int64",
+                "description": "Resultado líquido (negativo = prejuízo)"
+              }
+            }
+          }
+        }
+      },
+      "BudgetNote": {
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "year": {
+            "type": "integer"
+          },
+          "month": {
+            "type": "integer"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "BudgetNoteInput": {
+        "type": "object",
+        "required": [
+          "note"
+        ],
+        "properties": {
+          "note": {
+            "type": "string",
+            "maxLength": 500,
+            "nullable": true,
+            "description": "Vazio ou null remove o comentário"
+          }
+        }
       }
     }
   },
@@ -998,18 +1478,469 @@
         }
       }
     },
-    "/categories": {
+    "/category-groups": {
       "get": {
         "tags": [
-          "Categories"
+          "Category groups"
         ],
-        "summary": "Lista Categories",
+        "summary": "Lista grupos com as categorias de cada um",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "includeArchived",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "description": "Inclui arquivados (padrão: false)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CategoryGroupWithCategories"
+                      }
+                    },
+                    "error": {
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Category groups"
+        ],
+        "summary": "Cria grupo",
         "security": [
           {
             "bearerAuth": []
           }
         ],
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryGroupInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/CategoryGroup"
+                    },
+                    "error": {
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito (duplicado ou em uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/category-groups/{id}": {
+      "get": {
+        "tags": [
+          "Category groups"
+        ],
+        "summary": "Consulta grupo (inclui categorias arquivadas)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/CategoryGroupWithCategories"
+                    },
+                    "error": {
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Category groups"
+        ],
+        "summary": "Atualiza grupo (envie apenas os campos a alterar)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryGroupUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/CategoryGroup"
+                    },
+                    "error": {
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito (duplicado ou em uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Category groups"
+        ],
+        "summary": "Exclui grupo",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "description": "409 se o grupo tiver categorias: mova, apague ou arquive.",
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/CategoryGroup"
+                    },
+                    "error": {
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito (duplicado ou em uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/categories": {
+      "get": {
+        "tags": [
+          "Categories"
+        ],
+        "summary": "Lista categorias",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filtra por grupo"
+          },
+          {
+            "name": "includeArchived",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "description": "Inclui arquivados (padrão: false)"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Sucesso",
@@ -1071,6 +2002,7 @@
             "bearerAuth": []
           }
         ],
+        "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -1128,7 +2060,7 @@
             }
           },
           "409": {
-            "description": "Registro duplicado",
+            "description": "Conflito (duplicado ou em uso)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1246,8 +2178,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CategoryInput",
-                "description": "Todos os campos opcionais; ao menos um é obrigatório"
+                "$ref": "#/components/schemas/CategoryUpdate"
               }
             }
           }
@@ -1307,6 +2238,16 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Conflito (duplicado ou em uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       },
@@ -1331,6 +2272,7 @@
             }
           }
         ],
+        "description": "409 se a categoria tiver orçado ou lançamentos: arquive (PUT archived: true).",
         "responses": {
           "200": {
             "description": "Sucesso",
@@ -1388,7 +2330,457 @@
             }
           },
           "409": {
-            "description": "Registro em uso",
+            "description": "Conflito (duplicado ou em uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/budget/{year}": {
+      "get": {
+        "tags": [
+          "Budget"
+        ],
+        "summary": "Grade de orçamento do ano (categoria × 12 meses)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "year",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 2000,
+              "maximum": 2100
+            },
+            "description": "Ano do calendário"
+          },
+          {
+            "name": "includeArchived",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "description": "Inclui arquivados (padrão: false)"
+          }
+        ],
+        "description": "Categorias e grupos arquivados aparecem só se tiverem valor no ano (ou com includeArchived). Valores em centavos; null = sem orçado.",
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/BudgetGrid"
+                    },
+                    "error": {
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/budget/{year}/{month}/categories/{categoryId}": {
+      "put": {
+        "tags": [
+          "Budget"
+        ],
+        "summary": "Grava o orçado de uma categoria num mês",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "year",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 2000,
+              "maximum": 2100
+            },
+            "description": "Ano do calendário"
+          },
+          {
+            "name": "month",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12
+            }
+          },
+          {
+            "name": "categoryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "description": "Categoria arquivada não aceita orçado novo (400).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BudgetItemInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/BudgetItem"
+                    },
+                    "error": {
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/budget/{year}/{month}/categories/{categoryId}/note": {
+      "put": {
+        "tags": [
+          "Budget"
+        ],
+        "summary": "Grava o comentário de uma célula do orçamento",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "year",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 2000,
+              "maximum": 2100
+            },
+            "description": "Ano do calendário"
+          },
+          {
+            "name": "month",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12
+            }
+          },
+          {
+            "name": "categoryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "description": "Independe do valor: pode haver comentário sem orçado, e remover o valor não apaga o comentário. Replicar não copia comentários. Categoria arquivada: 400. Excluir a categoria apaga os comentários.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BudgetNoteInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/BudgetNote"
+                    },
+                    "error": {
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/budget/{year}/replicate": {
+      "post": {
+        "tags": [
+          "Budget"
+        ],
+        "summary": "Replica o valor de um mês para os meses seguintes",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "year",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 2000,
+              "maximum": 2100
+            },
+            "description": "Ano do calendário"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BudgetReplicateInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/BudgetReplicateResult"
+                    },
+                    "error": {
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/results/{year}": {
+      "get": {
+        "tags": [
+          "Results"
+        ],
+        "summary": "Resultado por mês e no ano",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "year",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 2000,
+              "maximum": 2100
+            },
+            "description": "Ano do calendário"
+          }
+        ],
+        "description": "Receita bruta − Despesas de trabalho = Receita antes de investimentos − Investimentos = Receita líquida − Despesas pessoais = Resultado líquido. Entrega 1: só orçado.",
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Results"
+                    },
+                    "error": {
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
             "content": {
               "application/json": {
                 "schema": {
@@ -1760,436 +3152,6 @@
                     },
                     "data": {
                       "$ref": "#/components/schemas/Period"
-                    },
-                    "error": {
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Dados inválidos",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Não autenticado",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Não encontrado",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Registro em uso",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/budget": {
-      "get": {
-        "tags": [
-          "Budget"
-        ],
-        "summary": "Lista Budget",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "period",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "account",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "category",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Sucesso",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "integer",
-                      "example": 200
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/Budget"
-                      }
-                    },
-                    "error": {
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Dados inválidos",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Não autenticado",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Budget"
-        ],
-        "summary": "Cria orçamento",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BudgetInput"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Sucesso",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "integer",
-                      "example": 200
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/Budget"
-                    },
-                    "error": {
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Dados inválidos",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Não autenticado",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Registro duplicado",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/budget/{id}": {
-      "get": {
-        "tags": [
-          "Budget"
-        ],
-        "summary": "Consulta orçamento",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Sucesso",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "integer",
-                      "example": 200
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/Budget"
-                    },
-                    "error": {
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Dados inválidos",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Não autenticado",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Não encontrado",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "Budget"
-        ],
-        "summary": "Atualiza orçamento (envie apenas os campos a alterar)",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BudgetInput",
-                "description": "Todos os campos opcionais; ao menos um é obrigatório"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Sucesso",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "integer",
-                      "example": 200
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/Budget"
-                    },
-                    "error": {
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Dados inválidos",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Não autenticado",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Não encontrado",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Budget"
-        ],
-        "summary": "Exclui orçamento",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Sucesso",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "integer",
-                      "example": 200
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/Budget"
                     },
                     "error": {
                       "nullable": true

@@ -10,6 +10,8 @@ import accountsRoute from "./accounts/routes/accounts-routes.js"
 import periodsRoute from "./periods/routes/periods-routes.js"
 import budgetRoute from "./budget/routes/budget-routes.js"
 import categoriesRoute from "./categories/routes/categories-routes.js"
+import categoryGroupsRoute from "./category-groups/routes/category-groups-routes.js"
+import resultsRoute from "./results/routes/results-routes.js"
 import transactionsRoute from "./transactions/routes/transactions-routes.js"
 
 const router = express.Router();
@@ -19,8 +21,10 @@ router.use(loggerMiddleware)// Middleware de logging
 
 router.use(accountsRoute); // Rotas de Contas
 router.use(periodsRoute); // Rotas de Periodos
-router.use(budgetRoute); // Rotas de Budget
+router.use(budgetRoute); // Rotas de Orçamento (grade anual)
+router.use(categoryGroupsRoute); // Rotas de Grupos de categorias
 router.use(categoriesRoute); // Rotas de Categorias
+router.use(resultsRoute); // Rotas de Resultado
 router.use(transactionsRoute); // Rotas de Transactions
 // router.use(ordersRoute);
 

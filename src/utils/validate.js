@@ -26,6 +26,21 @@ export const money = z.union([z.string(), z.number()])
 	.refine((v) => /^-?\d{1,8}(\.\d{1,2})?$/.test(v), 'invalid amount (max 8 digits and 2 decimals)')
 	.transform((v) => Number(v).toFixed(2))
 
+/** Maior valor aceito em centavos (R$ 99.999.999.999,99), o mesmo limite do front. */
+export const MAX_CENTS = 9_999_999_999_999
+
+/** Valor em centavos: inteiro, sem sinal (ex.: 123456 = R$ 1.234,56). */
+export const amountCents = z.number().int('must be an integer amount in cents').min(0).max(MAX_CENTS)
+
+/** Ano (vem como texto em params/query) */
+export const year = z.coerce.number().int().min(2000).max(2100)
+
+/** Mês do calendário, 1 a 12 (vem como texto em params/query) */
+export const month = z.coerce.number().int().min(1).max(12)
+
+/** Booleano vindo de query string ("true"/"false") */
+export const queryBoolean = z.enum(['true', 'false']).transform((v) => v === 'true')
+
 /** Parâmetros de rota com :id */
 export const idParams = z.object({ id: uuid })
 

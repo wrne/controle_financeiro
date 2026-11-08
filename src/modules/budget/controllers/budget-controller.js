@@ -1,80 +1,40 @@
-import { logInfo } from "../../../utils/logger.js"
-import { getAllBudget, getBudget, createBudget, updateBudget, deleteBudget } from "../services/budget-services.js"
+import { logInfo } from '../../../utils/logger.js'
+import { getBudgetGrid, setBudgetItem, setBudgetNote, replicateBudget } from '../services/budget-services.js'
 
-export async function getAllBudgetController(req, res) {
-
+export async function getBudgetGridController(req, res) {
 	try {
-		const budgetList = await getAllBudget(req.query)
-		logInfo(`budget list retrieved successful`)
-
-		res.success(budgetList, 'consult proceed successful.')
-
-
+		res.success(await getBudgetGrid(req.params.year, req.query), 'consult proceed successful.')
 	} catch (error) {
 		res.error(400, error, 'Failure on getting budget')
 	}
-
 }
 
-export async function getBudgetController(req, res) {
-
+export async function setBudgetItemController(req, res) {
 	try {
-		const budget = await getBudget(req.params.id)
-		logInfo(`budget retrieved successful`)
-
-		res.success(budget, 'consult proceed successful.')
-
-
+		const item = await setBudgetItem(req.params, req.body)
+		logInfo(`budget item saved successful`)
+		res.success(item, 'budget item saved successful.')
 	} catch (error) {
-		res.error(400, error, 'Failure on getting budget')
+		res.error(400, error, 'Failure on saving budget item')
 	}
-
 }
 
-
-export async function createBudgetController(req, res) {
-
+export async function setBudgetNoteController(req, res) {
 	try {
-		const budget = await createBudget(req.body)
-		logInfo(`budget created successful`)
-
-		res.success(budget, 'budget created successful.')
-
-
+		const note = await setBudgetNote(req.params, req.body)
+		logInfo(`budget note saved successful`)
+		res.success(note, 'budget note saved successful.')
 	} catch (error) {
-		res.error(400, error, 'Failure on creating budget')
+		res.error(400, error, 'Failure on saving budget note')
 	}
-
 }
 
-
-export async function updateBudgetController(req, res) {
-
+export async function replicateBudgetController(req, res) {
 	try {
-		const budget = await updateBudget(req.params.id, req.body)
-		logInfo(`budget updated successful`)
-
-		res.success(budget, 'budget updated successful.')
-
-
+		const result = await replicateBudget(req.params.year, req.body)
+		logInfo(`budget replicated successful`)
+		res.success(result, 'budget replicated successful.')
 	} catch (error) {
-		res.error(400, error, 'Failure on updating budget')
+		res.error(400, error, 'Failure on replicating budget')
 	}
-
-}
-
-
-export async function deleteBudgetController(req, res) {
-
-	try {
-		const budget = await deleteBudget(req.params.id)
-		logInfo(`budget deleted successful`)
-
-		res.success(budget, 'budget deleted successful.')
-
-
-	} catch (error) {
-		res.error(400, error, 'Failure on deleting budget')
-	}
-
 }

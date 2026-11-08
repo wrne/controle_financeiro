@@ -1,34 +1,50 @@
 import { AppError } from '../../../utils/app-error.js'
 import { assertReferences } from '../../../infra/repositories/ownership-repository.js'
-import { getAllBudgetRepo, getBudgetByIdRepo, createBudgetRepo, updateBudgetRepo, deleteBudgetRepo } from '../repositories/budget-repository.js';
+import { buildBudgetGrid, monthsByCategory, emptyMonths, replicateFrom } from '../budget-grid.js'
+import {
+	getYearDataRepo, getCategoryYearItemsRepo, upsertItemRepo, deleteItemRepo, replaceMonthsAfterRepo,
+	upsertNoteRepo, deleteNoteRepo
+} from '../repositories/budget-repository.js'
 
-export async function getAllBudget(filters) {
-	return await getAllBudgetRepo(filters)
+async function assertActiveCategory(categoryId) {
+	const { category } = await assertReferences({ category: categoryId })
+	if (category.archivedAt) throw new AppError(400, 'category is archived')
 }
 
-export async function getBudget(id) {
-	const row = await getBudgetByIdRepo(id)
-	if (!row) throw new AppError(404, 'budget not found')
-	return row
+export async function getBudgetGrid(year, { includeArchived = false } = {}) {
+	const data = await getYearDataRepo(year, { withNotes: true })
+	return buildBudgetGrid({ year, ...data, includeArchived })
 }
 
-export async function createBudget({ amount = '0.00', category, account, period }) {
-	await assertReferences({ account, category, period })
+/** Grava (ou remove, com null) o orçado de uma categoria num mês. */
+export async function setBudgetItem({ year, month, categoryId }, { amountCents }) {
+	await assertActiveCategory(categoryId)
 
-	return await createBudgetRepo({ amount, category, account, period })
+	if (amountCents === null) {
+		await deleteItemRepo({ categoryId, year, month })
+		return { categoryId, year, month, amountCents: null }
+	}
+	return upsertItemRepo({ categoryId, year, month, amountCents })
 }
 
-export async function updateBudget(id, data) {
-	const current = await getBudget(id)
+/** Grava (ou remove, com texto vazio ou null) o comentário de uma célula. Categoria arquivada: só leitura. */
+export async function setBudgetNote({ year, month, categoryId }, { note }) {
+	await assertActiveCategory(categoryId)
 
-	const merged = { ...current, ...data }
-	await assertReferences({ account: merged.account, category: merged.category, period: merged.period })
-
-	return await updateBudgetRepo(id, data)
+	if (!note) {
+		await deleteNoteRepo({ categoryId, year, month })
+		return { categoryId, year, month, note: null }
+	}
+	return upsertNoteRepo({ categoryId, year, month, note })
 }
 
-export async function deleteBudget(id) {
-	const row = await deleteBudgetRepo(id)
-	if (!row) throw new AppError(404, 'budget not found')
-	return row
+/** Copia o valor de fromMonth para os meses seguintes do ano. Devolve os 12 meses da categoria. */
+export async function replicateBudget(year, { categoryId, fromMonth }) {
+	await assertActiveCategory(categoryId)
+
+	const current = monthsByCategory(await getCategoryYearItemsRepo(categoryId, year)).get(categoryId) ?? emptyMonths()
+	const months = replicateFrom(current, fromMonth)
+	const saved = await replaceMonthsAfterRepo({ categoryId, year, fromMonth, months })
+
+	return { categoryId, year, months: monthsByCategory(saved).get(categoryId) ?? emptyMonths() }
 }

@@ -8,12 +8,12 @@ export const SESSION_COOKIE = 'fin_session'
 const CLOCK_SKEW_SECONDS = 30
 
 /**
- * Lê o payload do JWT e confere a validade.
+ * Lê o payload do JWT sem olhar o relógio (serve na renderização: com cacheComponents, ler o relógio ali
+ * dá "blocking-prerender-current-time"). A validade é conferida no proxy, na rota /api e pelo backend.
  * @param {string | undefined | null} token
- * @param {number} [nowMs]
- * @returns {{ login: string, exp: number } | null} null se ausente, malformado ou vencido
+ * @returns {{ login: string, exp: number } | null} null se ausente ou malformado
  */
-export function readToken(token, nowMs = Date.now()) {
+export function decodeToken(token) {
 	if (typeof token !== 'string' || token.length > 4096) return null
 
 	const parts = token.split('.')
@@ -27,9 +27,20 @@ export function readToken(token, nowMs = Date.now()) {
 	}
 
 	if (typeof payload?.login !== 'string' || !Number.isInteger(payload?.exp)) return null
-	if (payload.exp * 1000 <= nowMs + CLOCK_SKEW_SECONDS * 1000) return null
-
 	return { login: payload.login, exp: payload.exp }
+}
+
+/**
+ * Lê o payload do JWT e confere a validade. Só onde a requisição já chegou (proxy, Route Handler, Server Action).
+ * @param {string | undefined | null} token
+ * @param {number} [nowMs]
+ * @returns {{ login: string, exp: number } | null} null se ausente, malformado ou vencido
+ */
+export function readToken(token, nowMs = Date.now()) {
+	const payload = decodeToken(token)
+	if (!payload) return null
+	if (payload.exp * 1000 <= nowMs + CLOCK_SKEW_SECONDS * 1000) return null
+	return payload
 }
 
 /**

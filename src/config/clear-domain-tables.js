@@ -4,10 +4,12 @@ import pg from 'pg'
 const { Pool } = pg
 
 const tablesToClear = [
-  'budget',
+  'budget_notes',
+  'budget_items',
   'transactions',
   'periods',
   'categories',
+  'category_groups',
   'accounts'
 ]
 

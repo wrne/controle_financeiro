@@ -1,22 +1,25 @@
 import { z } from 'zod'
-import { uuid, money, atLeastOneField } from '../../utils/validate.js'
+import { uuid, amountCents, year, month, queryBoolean } from '../../utils/validate.js'
 
-export const createBudgetSchema = z.object({
-	amount: money.optional(),
-	category: uuid,
-	account: uuid,
-	period: uuid
+export const yearParams = z.object({ year })
+
+export const gridFilters = z.object({
+	includeArchived: queryBoolean.optional()
 })
 
-export const updateBudgetSchema = z.object({
-	amount: money,
-	category: uuid,
-	account: uuid,
-	period: uuid
-}).partial().refine(atLeastOneField, 'at least one field is required')
+export const itemParams = z.object({ year, month, categoryId: uuid })
 
-export const budgetFilters = z.object({
-	period: uuid.optional(),
-	account: uuid.optional(),
-	category: uuid.optional()
+// null remove o orçado do mês (fica "sem orçado", diferente de R$ 0,00).
+export const setItemSchema = z.object({
+	amountCents: amountCents.nullable()
+})
+
+// Texto vazio (depois do trim) ou null remove o comentário.
+export const setNoteSchema = z.object({
+	note: z.string().trim().max(500).nullable().transform((v) => v || null)
+})
+
+export const replicateSchema = z.object({
+	categoryId: uuid,
+	fromMonth: z.number().int().min(1).max(11)
 })
