@@ -23,7 +23,7 @@ Multiusuário só para separar os dados de cada login (uso pessoal e familiar). 
 - O "pagamento da fatura anterior" que aparece na fatura é ignorado: contá-lo seria contar a mesma despesa duas vezes.
 - Conta corrente: o lançamento pesa no mês da sua data (a data em que o dinheiro entra ou sai).
 - Todo comparativo (orçado × realizado, Resultado) é feito por **mês de caixa**.
-- Padrão: o mês de caixa de uma fatura é o mês do vencimento (a fatura de exemplo vence em 16/11/2026, logo pesa em novembro/2026). O campo é editável por período. Confirmar com o usuário se algum caso fugir disso.
+- Padrão: o mês de caixa de uma fatura é o mês do vencimento (a fatura de exemplo vence em 16/11/2026, logo pesa em novembro/2026). Confirmado na planilha original: a aba "Totais por Categoria" compara a fatura de cada mês com o orçamento do mesmo mês. O campo é editável por período. Confirmar com o usuário se algum caso fugir disso.
 
 ## Stack e comandos
 
@@ -34,7 +34,8 @@ Multiusuário só para separar os dados de cada login (uso pessoal e familiar). 
 - Variáveis de ambiente (ver `.env.example`): `DATABASE_URL`, `SEGREDO_JWT`, `PORT`, `LOG_PATH`; opcionais `CORS_ORIGINS` e `TRUST_PROXY`. O `server.js` falha na partida se faltar `DATABASE_URL` ou `SEGREDO_JWT`.
 - Não existem testes automatizados ainda. Ao criar lógica de negócio nova (importador, normalização, relatórios), criar testes junto.
 - Documentação da API em `/docs` (Swagger), a partir de `src/swagger.json`, mantido à mão: atualizar sempre que uma rota mudar.
-- Front-end: Next.js (App Router), ainda não criado. Decisões da fundação do front em "Decisões pendentes".
+- Front-end em `web/`: Next.js 16 (App Router, JavaScript, `cacheComponents` ligado), Tailwind CSS 4 sem biblioteca de componentes. Comandos dentro de `web/`: `npm run dev` (porta 3002), `npm run build`, `npm run lint`, `npm test` (`node --test`). Config em `web/.env.local` (ver `web/.env.example`): `API_URL` (backend, porta 3001 no `.env` local).
+- O Next 16 mudou APIs (ex.: `middleware` agora é `proxy.js`). Antes de escrever código do front, ler o guia em `web/node_modules/next/dist/docs/` (ver `web/AGENTS.md`). Com `cacheComponents`, componente que lê `cookies()` ou `searchParams` fica dentro de `<Suspense>`.
 
 ## Arquitetura e convenções (backend)
 
@@ -62,7 +63,8 @@ Multiusuário só para separar os dados de cada login (uso pessoal e familiar). 
 - Entrega 0 (base segura) aplicada: validação com zod, checagem de dono nas referências, PUT e filtros nas listagens, tratamento de erros sem vazar SQL, rate limit no login, CORS opcional, `/health`, índice único em `Users.login`, swagger reescrito.
 - Valores monetários ainda estão como `numeric(10,2)` (o Drizzle devolve texto). A validação normaliza para texto com 2 casas ("10.50"). Isso muda na Entrega 1.
 - O `budget` atual está preso a conta + período e tem `amount` em `numeric`. Ele será **substituído** na Entrega 1 (ver abaixo); os dados do banco são só de teste.
-- Não há front-end ainda.
+- Fundação do front (Entrega 1.0) feita em `web/`: login por Server Action, sessão em cookie `httpOnly` `fin_session` (vence junto com o JWT, 1h; sem refresh token), `src/proxy.js` redireciona para `/login` sem sessão válida, "Sair" apaga o cookie, layout base, `src/lib/money.js` (texto pt-BR ↔ centavos, com testes) e `MoneyInput`. A página inicial tem uma conferência temporária da entrada de valores, a retirar na Entrega 1.
+- Como o front fala com a API: Server Components e Server Actions usam `api()` de `web/src/lib/api.js`; Client Components usam `apiClient()` de `web/src/lib/api-client.js`, que chama `/api/<caminho>` (route handler `web/src/app/api/[...path]/route.js`), e esse repassa ao backend com o token. Requisição que altera dados exige `Origin` do próprio site (CSRF).
 
 ## Modelo de dados alvo
 
@@ -112,8 +114,8 @@ Trabalho por funcionalidade (fatia vertical): cada entrega muda **backend e fron
 ### Pré-requisitos gerais (antes da Entrega 1)
 
 1. **Entrega 0 rodando:** `npm install`, `npm run generate`, `npm run migrate` e `npm run dev` funcionando, e a senha do admin trocada.
-2. **Fundação do front (Entrega 1.0):** projeto Next.js, login e sessão por cookie `httpOnly`, cliente da API, layout base, formatação e entrada de valores em BRL (digitou "1.234,56" → 123456 centavos). Exige no backend: token de renovação (refresh token), logout e a decisão de como o front fala com a API (proxy do Next, que evita CORS). Ver "Decisões pendentes".
-3. **Lista inicial de grupos e categorias** (com `kind` e classificação do Resultado), a partir da planilha original. É insumo do usuário; pode ser extraída da planilha e confirmada.
+2. **Fundação do front (Entrega 1.0):** projeto Next.js, login e sessão por cookie `httpOnly`, cliente da API, layout base, formatação e entrada de valores em BRL (digitou "1.234,56" → 123456 centavos). Feita (ver "Estado atual"): login a cada hora, sem refresh token; logout só no Next (apaga o cookie).
+3. **Lista inicial de grupos e categorias** (com `kind` e classificação do Resultado): feita e confirmada em `dados/categorias-iniciais.json` (fora do git: tem nomes pessoais). 6 grupos e 49 categorias. Decisões: "Gastos Débito" e "Gastos Crédito" da planilha viraram "Despesas fixas" e "Dia a dia"; "Compras Parceladas" é uma categoria só, no "Dia a dia"; tarifas do cartão vão para "Banco". Imposto, Provisão Férias e a renda orçada são fórmulas na planilha (percentual da receita, valor-hora); na Entrega 1 são valores digitados, e uma regra automática fica para depois.
 
 ### Entrega 1: preenchimento do orçamento e resultado líquido
 
@@ -151,14 +153,10 @@ Objetivo: transação conhecida é categorizada sozinha na importação; as dema
 
 ## Decisões pendentes
 
-- **Onde fica o front:** recomendação é uma pasta no mesmo repositório (por exemplo `web/`), para ter um só clone e este `CLAUDE.md`; alternativa é repositório separado.
-- **TypeScript ou JavaScript no front**, e biblioteca de UI: decidir na fundação. O backend segue em JavaScript.
-- **Como o front chama a API:** proxy no Next (route handlers) com o token em cookie `httpOnly` é o recomendado, porque também serve o mobile depois e dispensa CORS no navegador.
-- **Renovação de sessão:** o JWT atual dura 1h e não há refresh token. Implementar refresh token e logout na fundação, ou aceitar novo login a cada hora no início.
+- **Limite de login atrás do Next:** o backend vê todas as tentativas vindas do IP do servidor Next, então o limite de 10 falhas vale para todos juntos. O Next repassa o IP do navegador em `X-Forwarded-For`, mas o backend só o usa com `TRUST_PROXY`, e isso só é seguro com um proxy reverso confiável na frente do Next sobrescrevendo esse cabeçalho. Decidir na hospedagem.
 - **`household`:** se a família for compartilhar o mesmo orçamento, adicionar esse conceito (hoje todo dado pertence a um usuário). Decidir antes de ter dados reais.
-- **Mês de caixa da fatura:** padrão é o mês do vencimento; confirmar com a planilha original.
 
-Decisões mantidas: Drizzle e JavaScript no backend (sem migrar para TypeScript agora).
+Decisões mantidas: Drizzle e JavaScript no backend (sem migrar para TypeScript agora). Front em `web/` no mesmo repositório, em JavaScript, falando com a API pelo servidor do Next (cookie `httpOnly`, sem CORS), com novo login a cada hora (sem refresh token por ora).
 
 ## Como trabalhar neste projeto
 
